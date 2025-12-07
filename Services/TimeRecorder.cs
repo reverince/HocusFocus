@@ -14,9 +14,10 @@ public class TimeRecorder : IDisposable
     private readonly DispatcherTimer _timer;
     
     private AppData _appData;
-    private string? _currentTrackedProcess;
+    private string? _currentTrackedProcess = "__INIT__"; // 초기값 (첫 번째 틱에서 상태 이벤트 발생 보장)
     private DateTime _lastSaveTime;
     private bool _isTracking;
+    private bool _wasIdle = false; // 이전 틱에서 잠수 상태였는지 추적
     
     // 딴짓시간, 잠수시간 (오늘 기록에서 로드)
     private long _slackingSeconds;
@@ -82,7 +83,14 @@ public class TimeRecorder : IDisposable
         if (!_isTracking)
         {
             _currentTrackedProcess = null;
+            _wasIdle = false;
             TrackingStatusChanged?.Invoke(null, false);
+        }
+        else
+        {
+            // 재개 시 상태 초기화 (다음 틱에서 상태 이벤트 발생 보장)
+            _currentTrackedProcess = "__INIT__";
+            _wasIdle = false;
         }
     }
 
@@ -114,7 +122,7 @@ public class TimeRecorder : IDisposable
     }
 
     /// <summary>
-    /// 유휴 시간 임계값 설정 (초)
+    /// 잠수 감지 시간 임계값 설정 (초)
     /// </summary>
     public void SetIdleThreshold(int seconds)
     {
@@ -168,21 +176,38 @@ public class TimeRecorder : IDisposable
         var activeProcess = _windowTracker.GetActiveProcessName();
         var isIdle = _idleDetector.IsIdle(_appData.IdleThresholdSeconds);
 
-        // 유휴 상태면 잠수시간 증가
+        // 잠수 감지
         if (isIdle)
         {
-            _idleSeconds++;
-            _appData.GetTodayRecord().AddIdleTime(1);
+            var wasIdleBefore = _wasIdle;
+            
+            // 잠수 상태로 전환될 때: 잠수 감지 시간만큼 한 번에 증가
+            if (!wasIdleBefore)
+            {
+                var thresholdSeconds = _appData.IdleThresholdSeconds;
+                _idleSeconds += thresholdSeconds;
+                _appData.GetTodayRecord().AddIdleTime(thresholdSeconds);
+                _wasIdle = true;
+            }
+            else
+            {
+                // 잠수 상태 유지 중: 1초씩 증가
+                _idleSeconds++;
+                _appData.GetTodayRecord().AddIdleTime(1);
+            }
+            
             SessionTimesUpdated?.Invoke(_slackingSeconds, _idleSeconds);
             
-            // 항상 유휴 상태 알림 (볼드 표시용)
-            if (_currentTrackedProcess != null)
+            // 잠수 상태 알림 (볼드 표시용) - 상태 전환 시에만
+            if (!wasIdleBefore)
             {
                 _currentTrackedProcess = null;
+                TrackingStatusChanged?.Invoke(null, true);
             }
-            TrackingStatusChanged?.Invoke(null, true);
             return;
         }
+        
+        _wasIdle = false;
 
         // 추적 대상 앱인지 확인
         var isTrackedApp = activeProcess != null && 

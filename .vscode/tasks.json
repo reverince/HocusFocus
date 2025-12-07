@@ -14,18 +14,64 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build-debug",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/HocusFocus.csproj",
+                "-c",
+                "Debug",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build-release",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/HocusFocus.csproj",
+                "-c",
+                "Release",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "clean",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "clean",
-                "${workspaceFolder}/FocusClock.csproj"
+                "${workspaceFolder}/HocusFocus.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
         {
             "label": "rebuild",
             "dependsOn": ["clean", "build"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "rebuild-debug",
+            "dependsOn": ["clean"],
+            "type": "shell",
+            "command": "dotnet build ${workspaceFolder}/HocusFocus.csproj -c Debug",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "rebuild-release",
+            "dependsOn": ["clean"],
+            "type": "shell",
+            "command": "dotnet build ${workspaceFolder}/HocusFocus.csproj -c Release",
             "problemMatcher": "$msCompile"
         }
     ]

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace HocusFocus.Services;
 
 /// <summary>
-/// 사용자 유휴 시간을 감지하는 서비스
+/// 사용자 잠수 시간을 감지하는 서비스
 /// </summary>
 public class IdleDetector
 {
@@ -33,7 +33,7 @@ public class IdleDetector
     }
 
     /// <summary>
-    /// 지정된 시간(초) 이상 유휴 상태인지 확인
+    /// 지정된 시간(초) 이상 잠수 상태인지 확인
     /// </summary>
     public bool IsIdle(int thresholdSeconds)
     {

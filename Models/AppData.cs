@@ -6,9 +6,9 @@ namespace HocusFocus.Models;
 public class AppData
 {
     public List<TrackedApp> TrackedApps { get; set; } = new();
-    public int IdleThresholdSeconds { get; set; } = 300; // 기본 5분
+    public int IdleThresholdSeconds { get; set; } = 5; // 기본 5초 (잠수 감지 시간)
     public bool MinimizeToTrayOnClose { get; set; } = false; // 닫을 때 트레이로 최소화 (기본값: false = 완전 종료)
-    public int MiniModeOpacityPercent { get; set; } = 90; // 미니 모드 불투명도 (10 ~ 100)
+    public int MiniModeOpacityPercent { get; set; } = 50; // 미니 모드 불투명도 (10 ~ 100)
     public Dictionary<string, DailyRecord> DailyRecords { get; set; } = new();
 
     /// <summary>

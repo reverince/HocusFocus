@@ -432,7 +432,7 @@
                                        Foreground="{StaticResource TextPrimary}"
                                        Margin="0,0,0,16"/>
                             
-                            <TextBlock Text="유휴 감지 시간 (초)" 
+                            <TextBlock Text="잠수 감지 시간 (초)" 
                                        FontSize="13" 
                                        Foreground="{StaticResource TextSecondary}"
                                        Margin="0,0,0,8"/>

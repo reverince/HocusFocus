@@ -2,12 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "HocusFocus",
+            "name": "HocusFocus (Debug)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-debug",
             "program": "dotnet",
-            "args": ["run", "--project", "${workspaceFolder}/HocusFocus.csproj"],
+            "args": ["run", "--project", "${workspaceFolder}/HocusFocus.csproj", "-c", "Debug"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "HocusFocus (Release)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-release",
+            "program": "dotnet",
+            "args": ["run", "--project", "${workspaceFolder}/HocusFocus.csproj", "-c", "Release"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"

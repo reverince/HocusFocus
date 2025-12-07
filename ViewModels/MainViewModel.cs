@@ -55,18 +55,18 @@ public partial class MainViewModel : ObservableObject
     private bool _isTracking = true;
 
     [ObservableProperty]
-    private int _idleThresholdSeconds = 300;
+    private int _idleThresholdSeconds = 5;
 
     [ObservableProperty]
     private bool _minimizeToTrayOnClose = false;
 
     // 미니 모드 불투명도 (UI용: 0.0~1.0)
     [ObservableProperty]
-    private double _miniModeOpacity = 0.9;
+    private double _miniModeOpacity = 0.5;
 
     // 미니 모드 불투명도 (설정용: 10~100)
     [ObservableProperty]
-    private int _miniModeOpacityPercent = 90;
+    private int _miniModeOpacityPercent = 50;
 
     [ObservableProperty]
     private ObservableCollection<TrackedAppViewModel> _trackedApps = new();
@@ -131,7 +131,7 @@ public partial class MainViewModel : ObservableObject
         if (isIdle)
         {
             IsIdling = true;
-            CurrentStatus = "⏸️ 유휴 상태";
+            CurrentStatus = "⏸️ 잠수 상태";
         }
         else if (processName != null)
         {
@@ -368,21 +368,29 @@ public partial class MainViewModel : ObservableObject
             var trackedApp = _timeRecorder.AppData.TrackedApps
                 .FirstOrDefault(a => a.ProcessName.Equals(appName, StringComparison.OrdinalIgnoreCase));
             var displayName = trackedApp?.DisplayName ?? appName;
+            
+            // Name이 비어있으면 프로세스 이름 사용
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                displayName = appName;
+            }
 
             var color = AppColors[colorIndex % AppColors.Length];
-            seriesList.Add(new StackedColumnSeries<double>
+            var series = new StackedColumnSeries<double>
             {
                 Values = values,
                 Fill = new SolidColorPaint(SKColor.Parse(color)),
                 Stroke = null,
-                MaxBarWidth = 35,
-                Name = displayName
-            });
+                MaxBarWidth = 35
+            };
+            // Name 속성을 명시적으로 설정 (LiveCharts2 범례 표시용)
+            series.Name = displayName;
+            seriesList.Add(series);
             
             colorIndex++;
         }
 
-        // 앱이 없으면 빈 시리즈 추가
+        // 앱이 없으면 빈 시리즈 추가 (범례 숨김용)
         if (seriesList.Count == 0)
         {
             seriesList.Add(new StackedColumnSeries<double>
@@ -390,7 +398,8 @@ public partial class MainViewModel : ObservableObject
                 Values = new double[] { 0, 0, 0, 0, 0, 0, 0 },
                 Fill = new SolidColorPaint(SKColor.Parse("#6366f1")),
                 Stroke = null,
-                MaxBarWidth = 35
+                MaxBarWidth = 35,
+                Name = "" // 빈 이름으로 범례 숨김
             });
         }
 
