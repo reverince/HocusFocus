@@ -22,11 +22,20 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
       
-    - name: Build Release
+    - name: Build Release (Shipping)
       run: dotnet build -c Release --no-restore
       
-    - name: Publish Release
-      run: dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o ./publish
+    - name: Publish Release (Shipping)
+      run: |
+        dotnet publish -c Release `
+          -r win-x64 `
+          --self-contained false `
+          -p:PublishSingleFile=false `
+          -p:DebugType=none `
+          -p:DebugSymbols=false `
+          -p:Optimize=true `
+          -p:IncludeNativeLibrariesForSelfExtract=false `
+          -o ./publish
       
     - name: Create Release Archive
       shell: powershell
