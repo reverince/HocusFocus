@@ -41,7 +41,18 @@ jobs:
       shell: powershell
       run: |
         $version = $env:GITHUB_REF -replace 'refs/tags/', ''
-        Compress-Archive -Path ./publish/* -DestinationPath ./HocusFocus-$version-win-x64.zip -Force
+        # Shipping 빌드: 실행에 필요한 파일만 포함
+        $releaseDir = "./release"
+        New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+        
+        # 실행 파일 및 필수 DLL만 복사
+        Copy-Item "./publish/HocusFocus.exe" -Destination $releaseDir
+        Copy-Item "./publish/HocusFocus.dll" -Destination $releaseDir
+        Copy-Item "./publish/HocusFocus.runtimeconfig.json" -Destination $releaseDir
+        Copy-Item "./publish/*.dll" -Destination $releaseDir
+        
+        # ZIP 파일 생성
+        Compress-Archive -Path "$releaseDir/*" -DestinationPath "./HocusFocus-$version-win-x64.zip" -Force
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
