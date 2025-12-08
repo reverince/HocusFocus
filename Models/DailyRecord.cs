@@ -32,11 +32,30 @@ public class DailyRecord
     }
 
     /// <summary>
+    /// 특정 앱의 사용 시간(초) 감소 (잠수 감지 시 보정용)
+    /// </summary>
+    public void SubtractTime(string processName, long seconds)
+    {
+        if (AppSeconds.ContainsKey(processName))
+        {
+            AppSeconds[processName] = Math.Max(0, AppSeconds[processName] - seconds);
+        }
+    }
+
+    /// <summary>
     /// 딴짓시간 추가
     /// </summary>
     public void AddSlackingTime(long seconds)
     {
         SlackingSeconds += seconds;
+    }
+
+    /// <summary>
+    /// 딴짓시간 감소 (잠수 감지 시 보정용)
+    /// </summary>
+    public void SubtractSlackingTime(long seconds)
+    {
+        SlackingSeconds = Math.Max(0, SlackingSeconds - seconds);
     }
 
     /// <summary>

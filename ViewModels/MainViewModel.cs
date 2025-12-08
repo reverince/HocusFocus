@@ -68,6 +68,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private int _miniModeOpacityPercent = 50;
 
+    // 미니 모드 창 위치
+    public double? MiniModeLeft => _timeRecorder.AppData.MiniModeLeft;
+    public double? MiniModeTop => _timeRecorder.AppData.MiniModeTop;
+
     [ObservableProperty]
     private ObservableCollection<TrackedAppViewModel> _trackedApps = new();
 
@@ -151,6 +155,7 @@ public partial class MainViewModel : ObservableObject
     {
         UpdateTodayTime();
         RefreshTodayAppTimes();
+        RefreshWeeklyChart();
     }
 
     private void OnSessionTimesUpdated(long slackingSeconds, long idleSeconds)
@@ -259,6 +264,11 @@ public partial class MainViewModel : ObservableObject
         var clampedValue = Math.Clamp(value, 10, 100);
         MiniModeOpacity = clampedValue / 100.0;
         _timeRecorder.SetMiniModeOpacity(clampedValue);
+    }
+
+    public void SaveMiniModePosition(double left, double top)
+    {
+        _timeRecorder.SetMiniModePosition(left, top);
     }
 
     private void RefreshTrackedApps()

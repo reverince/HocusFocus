@@ -9,6 +9,8 @@ public class AppData
     public int IdleThresholdSeconds { get; set; } = 5; // 기본 5초 (잠수 감지 시간)
     public bool MinimizeToTrayOnClose { get; set; } = false; // 닫을 때 트레이로 최소화 (기본값: false = 완전 종료)
     public int MiniModeOpacityPercent { get; set; } = 50; // 미니 모드 불투명도 (10 ~ 100)
+    public double? MiniModeLeft { get; set; } = null; // 미니 모드 창 위치 X
+    public double? MiniModeTop { get; set; } = null; // 미니 모드 창 위치 Y
     public Dictionary<string, DailyRecord> DailyRecords { get; set; } = new();
 
     /// <summary>

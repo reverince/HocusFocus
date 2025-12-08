@@ -149,6 +149,16 @@ public class TimeRecorder : IDisposable
     }
 
     /// <summary>
+    /// 미니 모드 창 위치 설정
+    /// </summary>
+    public void SetMiniModePosition(double left, double top)
+    {
+        _appData.MiniModeLeft = left;
+        _appData.MiniModeTop = top;
+        SaveAsync();
+    }
+
+    /// <summary>
     /// 오늘의 총 집중 시간 가져오기
     /// </summary>
     public TimeSpan GetTodayTotalTime()
@@ -185,9 +195,28 @@ public class TimeRecorder : IDisposable
             if (!wasIdleBefore)
             {
                 var thresholdSeconds = _appData.IdleThresholdSeconds;
+                
+                // 이전 상태에 따라 시간 보정 (잠수 감지 시간만큼 이미 잠수였으므로)
+                if (_currentTrackedProcess != null && _currentTrackedProcess != "__INIT__")
+                {
+                    // 집중 중이었음 → 해당 앱 시간에서 감소
+                    _appData.GetTodayRecord().SubtractTime(_currentTrackedProcess, thresholdSeconds);
+                    TodayTimeUpdated?.Invoke(_appData.GetTodayRecord().GetTotalTime());
+                }
+                else if (_currentTrackedProcess == null)
+                {
+                    // 딴짓 중이었음 → 딴짓 타이머 감소
+                    _slackingSeconds = Math.Max(0, _slackingSeconds - thresholdSeconds);
+                    _appData.GetTodayRecord().SubtractSlackingTime(thresholdSeconds);
+                }
+                // _currentTrackedProcess == "__INIT__"인 경우는 초기 상태이므로 감소 없음
+                
                 _idleSeconds += thresholdSeconds;
                 _appData.GetTodayRecord().AddIdleTime(thresholdSeconds);
                 _wasIdle = true;
+                
+                _currentTrackedProcess = null;
+                TrackingStatusChanged?.Invoke(null, true);
             }
             else
             {
@@ -197,13 +226,6 @@ public class TimeRecorder : IDisposable
             }
             
             SessionTimesUpdated?.Invoke(_slackingSeconds, _idleSeconds);
-            
-            // 잠수 상태 알림 (볼드 표시용) - 상태 전환 시에만
-            if (!wasIdleBefore)
-            {
-                _currentTrackedProcess = null;
-                TrackingStatusChanged?.Invoke(null, true);
-            }
             return;
         }
         

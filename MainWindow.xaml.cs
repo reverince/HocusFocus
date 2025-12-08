@@ -66,6 +66,12 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        // 미니 모드일 때 위치 저장
+        if (_viewModel.IsMiniMode)
+        {
+            _viewModel.SaveMiniModePosition(Left, Top);
+        }
+        
         if (!_isExiting && _viewModel.MinimizeToTrayOnClose)
         {
             // 트레이로 최소화 옵션이 켜져 있으면 숨기기
@@ -92,11 +98,7 @@ public partial class MainWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2)
-        {
-            MaximizeWindow_Click(sender, e);
-        }
-        else if (e.LeftButton == MouseButtonState.Pressed)
+        if (e.LeftButton == MouseButtonState.Pressed)
         {
             DragMove();
         }
@@ -105,13 +107,6 @@ public partial class MainWindow : Window
     private void MinimizeWindow_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
-    }
-
-    private void MaximizeWindow_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Maximized 
-            ? WindowState.Normal 
-            : WindowState.Maximized;
     }
 
     private void CloseWindow_Click(object sender, RoutedEventArgs e)
@@ -179,14 +174,28 @@ public partial class MainWindow : Window
         // SizeToContent로 콘텐츠에 맞게 크기 조정
         SizeToContent = SizeToContent.WidthAndHeight;
         
-        // 화면 오른쪽 하단에 배치
+        // 저장된 미니 모드 위치가 있으면 복원, 없으면 화면 오른쪽 하단
+        var savedLeft = _viewModel.MiniModeLeft;
+        var savedTop = _viewModel.MiniModeTop;
         var workArea = SystemParameters.WorkArea;
         
         // SizeToContent가 적용된 후 위치 설정
         Dispatcher.BeginInvoke(new Action(() =>
         {
-            Left = workArea.Right - ActualWidth - 20;
-            Top = workArea.Bottom - ActualHeight - 20;
+            if (savedLeft.HasValue && savedTop.HasValue)
+            {
+                // 저장된 위치가 화면 안에 있는지 확인
+                var left = Math.Max(workArea.Left, Math.Min(savedLeft.Value, workArea.Right - ActualWidth));
+                var top = Math.Max(workArea.Top, Math.Min(savedTop.Value, workArea.Bottom - ActualHeight));
+                Left = left;
+                Top = top;
+            }
+            else
+            {
+                // 기본 위치: 화면 오른쪽 하단
+                Left = workArea.Right - ActualWidth - 20;
+                Top = workArea.Bottom - ActualHeight - 20;
+            }
         }), System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
@@ -199,6 +208,9 @@ public partial class MainWindow : Window
             Activate();
             return;
         }
+        
+        // 미니 모드 위치 저장
+        _viewModel.SaveMiniModePosition(Left, Top);
         
         // 메인 모드로 전환
         _viewModel.IsMiniMode = false;
