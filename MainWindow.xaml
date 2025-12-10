@@ -351,6 +351,7 @@
                                                 TooltipPosition="Top"
                                                 LegendPosition="Bottom"
                                                 LegendTextPaint="{Binding WeeklyChartLegendPaint}"
+                                                AnimationsSpeed="00:00:00"
                                                 Background="Transparent">
                             </lvc:CartesianChart>
                         </Grid>
