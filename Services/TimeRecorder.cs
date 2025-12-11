@@ -18,10 +18,14 @@ public class TimeRecorder : IDisposable
     private DateTime _lastSaveTime;
     private bool _isTracking;
     private bool _wasIdle = false; // 이전 틱에서 잠수 상태였는지 추적
+    private DateOnly _currentDate; // 현재 추적 중인 날짜 (자정 감지용)
     
     // 딴짓시간, 잠수시간 (오늘 기록에서 로드)
     private long _slackingSeconds;
     private long _idleSeconds;
+    
+    // 자정(날짜 변경) 이벤트
+    public event Action? DayChanged;
 
     public event Action<string?, bool>? TrackingStatusChanged;
     public event Action<long>? TodayTimeUpdated;
@@ -59,6 +63,7 @@ public class TimeRecorder : IDisposable
         var todayRecord = _appData.GetTodayRecord();
         _slackingSeconds = todayRecord.SlackingSeconds;
         _idleSeconds = todayRecord.IdleSeconds;
+        _currentDate = DateOnly.FromDateTime(DateTime.Today);
         
         _isTracking = true;
         _timer.Start();
@@ -183,6 +188,18 @@ public class TimeRecorder : IDisposable
         if (!_isTracking)
             return;
 
+        // 자정 감지: 날짜가 바뀌면 딴짓/잠수 시간 리셋
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (today != _currentDate)
+        {
+            _currentDate = today;
+            _slackingSeconds = 0;
+            _idleSeconds = 0;
+            _currentTrackedProcess = "__INIT__"; // 상태 초기화
+            _wasIdle = false;
+            DayChanged?.Invoke();
+        }
+
         var activeProcess = _windowTracker.GetActiveProcessName();
         var isIdle = _idleDetector.IsIdle(_appData.IdleThresholdSeconds);
 
@@ -229,6 +246,7 @@ public class TimeRecorder : IDisposable
             return;
         }
         
+        var wasIdleBeforeThisTick = _wasIdle;
         _wasIdle = false;
 
         // 추적 대상 앱인지 확인
@@ -257,9 +275,12 @@ public class TimeRecorder : IDisposable
             _appData.GetTodayRecord().AddSlackingTime(1);
             SessionTimesUpdated?.Invoke(_slackingSeconds, _idleSeconds);
             
-            if (_currentTrackedProcess != null)
+            // 상태 변경 감지: 집중/잠수 → 딴짓 전환 시 이벤트 발생
+            var needsUpdate = _currentTrackedProcess != null || wasIdleBeforeThisTick;
+            _currentTrackedProcess = null;
+            
+            if (needsUpdate)
             {
-                _currentTrackedProcess = null;
                 TrackingStatusChanged?.Invoke(null, false);
             }
         }

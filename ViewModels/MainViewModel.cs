@@ -102,6 +102,7 @@ public partial class MainViewModel : ObservableObject
         _timeRecorder.TrackingStatusChanged += OnTrackingStatusChanged;
         _timeRecorder.TodayTimeUpdated += OnTodayTimeUpdated;
         _timeRecorder.SessionTimesUpdated += OnSessionTimesUpdated;
+        _timeRecorder.DayChanged += OnDayChanged;
     }
 
     public async Task InitializeAsync()
@@ -163,6 +164,25 @@ public partial class MainViewModel : ObservableObject
         SlackingTime = TimeSpan.FromSeconds(slackingSeconds).ToString(@"hh\:mm\:ss");
         IdleTime = TimeSpan.FromSeconds(idleSeconds).ToString(@"hh\:mm\:ss");
         UpdateTimeRatios(slackingSeconds, idleSeconds);
+    }
+
+    private void OnDayChanged()
+    {
+        // 자정: 모든 시간 표시 리셋
+        TodayTime = "00:00:00";
+        SlackingTime = "00:00:00";
+        IdleTime = "00:00:00";
+        FocusRatio = 1;
+        SlackingRatio = 0;
+        IdleRatio = 0;
+        CurrentStatus = "대기 중";
+        IsFocusing = false;
+        IsSlacking = false;
+        IsIdling = false;
+        
+        // 앱별 시간 및 차트 갱신
+        RefreshTodayAppTimes();
+        RefreshWeeklyChart();
     }
 
     private void UpdateTimeRatios(long slackingSeconds, long idleSeconds)
