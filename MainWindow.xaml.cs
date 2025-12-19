@@ -57,7 +57,8 @@ public partial class MainWindow : Window
 
     private void Window_StateChanged(object sender, EventArgs e)
     {
-        if (WindowState == WindowState.Minimized && !_viewModel.IsMiniMode)
+        // 트레이로 최소화 옵션이 켜져 있을 때만 트레이로 숨김
+        if (WindowState == WindowState.Minimized && !_viewModel.IsMiniMode && _viewModel.MinimizeToTrayOnClose)
         {
             Hide();
             TrayIcon.ShowBalloonTip("HocusFocus", "백그라운드에서 실행 중입니다.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
@@ -174,17 +175,21 @@ public partial class MainWindow : Window
         // SizeToContent로 콘텐츠에 맞게 크기 조정
         SizeToContent = SizeToContent.WidthAndHeight;
         
-        // 저장된 미니 모드 위치가 있으면 복원, 없으면 화면 오른쪽 하단
+        // 저장된 미니 모드 위치가 있으면 복원, 없으면 현재 모니터 오른쪽 하단
         var savedLeft = _viewModel.MiniModeLeft;
         var savedTop = _viewModel.MiniModeTop;
-        var workArea = SystemParameters.WorkArea;
         
         // SizeToContent가 적용된 후 위치 설정
         Dispatcher.BeginInvoke(new Action(() =>
         {
             if (savedLeft.HasValue && savedTop.HasValue)
             {
-                // 저장된 위치가 화면 안에 있는지 확인
+                // 저장된 위치가 어느 모니터에든 보이는지 확인
+                var point = new System.Drawing.Point((int)savedLeft.Value, (int)savedTop.Value);
+                var screen = System.Windows.Forms.Screen.FromPoint(point);
+                var workArea = screen.WorkingArea;
+                
+                // 해당 모니터의 작업 영역 내로 조정
                 var left = Math.Max(workArea.Left, Math.Min(savedLeft.Value, workArea.Right - ActualWidth));
                 var top = Math.Max(workArea.Top, Math.Min(savedTop.Value, workArea.Bottom - ActualHeight));
                 Left = left;
@@ -192,7 +197,10 @@ public partial class MainWindow : Window
             }
             else
             {
-                // 기본 위치: 화면 오른쪽 하단
+                // 기본 위치: 현재 창이 있는 모니터의 오른쪽 하단
+                var currentScreen = System.Windows.Forms.Screen.FromPoint(
+                    new System.Drawing.Point((int)_mainLeft, (int)_mainTop));
+                var workArea = currentScreen.WorkingArea;
                 Left = workArea.Right - ActualWidth - 20;
                 Top = workArea.Bottom - ActualHeight - 20;
             }

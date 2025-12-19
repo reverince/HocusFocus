@@ -330,8 +330,8 @@
                     </Border>
 
                     <!-- 주간 차트 -->
-                    <Border Style="{StaticResource CardBorder}" Height="320">
-                        <Grid>
+                    <Border Style="{StaticResource CardBorder}" Height="320" ClipToBounds="False">
+                        <Grid ClipToBounds="False">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
@@ -348,11 +348,13 @@
                                                 Series="{Binding WeeklyChartSeries}"
                                                 XAxes="{Binding WeeklyChartXAxes}"
                                                 YAxes="{Binding WeeklyChartYAxes}"
-                                                TooltipPosition="Top"
+                                                TooltipPosition="Left"
                                                 LegendPosition="Bottom"
                                                 LegendTextPaint="{Binding WeeklyChartLegendPaint}"
                                                 AnimationsSpeed="00:00:00"
-                                                Background="Transparent">
+                                                Background="Transparent"
+                                                Panel.ZIndex="1000"
+                                                ClipToBounds="False">
                             </lvc:CartesianChart>
                         </Grid>
                     </Border>

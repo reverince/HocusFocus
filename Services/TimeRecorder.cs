@@ -198,6 +198,7 @@ public class TimeRecorder : IDisposable
             _currentTrackedProcess = "__INIT__"; // 상태 초기화
             _wasIdle = false;
             DayChanged?.Invoke();
+            return;
         }
 
         var activeProcess = _windowTracker.GetActiveProcessName();
