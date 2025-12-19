@@ -181,7 +181,23 @@
                 <!-- 왼쪽 패널 -->
                 <StackPanel Grid.Column="0" Margin="0,0,16,0">
                     <!-- 오늘의 집중 시간 -->
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+                    <Border CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#1e293b"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFocusing}" Value="True">
+                                        <Setter Property="Background" Value="#1a1625"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSlacking}" Value="True">
+                                        <Setter Property="Background" Value="#1f1a15"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsIdling}" Value="True">
+                                        <Setter Property="Background" Value="#1a1a1f"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -190,18 +206,57 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="오늘의 집중 시간" 
+                                    <TextBlock Text="오늘의 활동 시간" 
                                                FontSize="14" 
                                                Foreground="{StaticResource TextSecondary}"/>
-                                    <TextBlock Text="{Binding TodayTime}" 
-                                               FontSize="48" 
-                                               FontWeight="{Binding IsFocusing, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
-                                               Foreground="{StaticResource AccentPurple}"
-                                               FontFamily="Consolas"
-                                               Margin="0,8,0,0"/>
                                     
-                                    <!-- 딴짓시간 & 잠수시간 -->
+                                    <!-- 메인 타이머 (활성 상태에 따라 전환) -->
+                                    <Grid Margin="0,8,0,0" Height="58">
+                                        <!-- 집중 시간 (딴짓/잠수 아닐 때) -->
+                                        <TextBlock Text="{Binding TodayTime}" 
+                                                   FontSize="48" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentPurple}"
+                                                   FontFamily="Consolas">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSlacking}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsIdling}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <!-- 딴짓 시간 -->
+                                        <TextBlock Text="{Binding SlackingTime}" 
+                                                   FontSize="48" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentAmber}"
+                                                   FontFamily="Consolas"
+                                                   Visibility="{Binding IsSlacking, Converter={StaticResource BoolToVisibility}}"/>
+                                        <!-- 잠수 시간 -->
+                                        <TextBlock Text="{Binding IdleTime}" 
+                                                   FontSize="48" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentSlate}"
+                                                   FontFamily="Consolas"
+                                                   Visibility="{Binding IsIdling, Converter={StaticResource BoolToVisibility}}"/>
+                                    </Grid>
+                                    
+                                    <!-- 세 타이머 요약 -->
                                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <StackPanel Margin="0,0,24,0">
+                                            <TextBlock Text="집중시간" 
+                                                       FontSize="11" 
+                                                       Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding TodayTime}" 
+                                                       FontSize="18" 
+                                                       FontWeight="{Binding IsFocusing, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
+                                                       Foreground="{StaticResource AccentPurple}"
+                                                       FontFamily="Consolas"/>
+                                        </StackPanel>
                                         <StackPanel Margin="0,0,24,0">
                                             <TextBlock Text="딴짓시간" 
                                                        FontSize="11" 
@@ -510,9 +565,25 @@
         <Grid Visibility="{Binding IsMiniMode, Converter={StaticResource BoolToVisibility}}"
               VerticalAlignment="Top" HorizontalAlignment="Left"
               Margin="4">
-            <!-- 배경 -->
-            <Border Background="#1e293b" CornerRadius="12"
-                    Opacity="{Binding MiniModeOpacity}"/>
+            <!-- 배경 (상태에 따라 색상 변경) -->
+            <Border x:Name="MiniBgFocus" CornerRadius="12" Opacity="{Binding MiniModeOpacity}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#1e293b"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFocusing}" Value="True">
+                                <Setter Property="Background" Value="#1a1625"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsSlacking}" Value="True">
+                                <Setter Property="Background" Value="#1f1a15"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsIdling}" Value="True">
+                                <Setter Property="Background" Value="#1a1a1f"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
             <!-- 일시정지 상태 테두리 (추적 중일 때는 숨김) -->
             <Border CornerRadius="12" BorderThickness="2"
                     BorderBrush="{StaticResource AccentRed}"
@@ -557,35 +628,64 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- 집중 시간 -->
-                <TextBlock Grid.Row="1" 
-                           Text="{Binding TodayTime}" 
-                           FontSize="32" 
-                           FontWeight="{Binding IsFocusing, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
-                           Foreground="{StaticResource AccentPurple}"
-                           FontFamily="Consolas"
-                           HorizontalAlignment="Center"
-                           Margin="0,2,0,0"/>
+                <!-- 메인 타이머 (활성 상태에 따라 전환) -->
+                <Grid Grid.Row="1" Margin="0,2,0,0">
+                    <!-- 집중 시간 (딴짓/잠수 아닐 때) -->
+                    <TextBlock Text="{Binding TodayTime}" 
+                               FontSize="32" FontWeight="Bold"
+                               Foreground="{StaticResource AccentPurple}"
+                               FontFamily="Consolas"
+                               HorizontalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSlacking}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsIdling}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <!-- 딴짓 시간 -->
+                    <TextBlock Text="{Binding SlackingTime}" 
+                               FontSize="32" FontWeight="Bold"
+                               Foreground="{StaticResource AccentAmber}"
+                               FontFamily="Consolas"
+                               HorizontalAlignment="Center"
+                               Visibility="{Binding IsSlacking, Converter={StaticResource BoolToVisibility}}"/>
+                    <!-- 잠수 시간 -->
+                    <TextBlock Text="{Binding IdleTime}" 
+                               FontSize="32" FontWeight="Bold"
+                               Foreground="{StaticResource AccentSlate}"
+                               FontFamily="Consolas"
+                               HorizontalAlignment="Center"
+                               Visibility="{Binding IsIdling, Converter={StaticResource BoolToVisibility}}"/>
+                </Grid>
 
-                <!-- 딴짓시간 & 잠수시간 -->
-                <Grid Grid.Row="2" Margin="0,4,0,0">
+                <!-- 하단: 세 타이머 요약 (텍스트 없이 시간만) -->
+                <Grid Grid.Row="2" Margin="0,6,0,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="딴짓 " FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding SlackingTime}" FontSize="14" 
-                                   FontWeight="{Binding IsSlacking, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
-                                   Foreground="{StaticResource AccentAmber}" FontFamily="Consolas" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="잠수 " FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding IdleTime}" FontSize="14" 
-                                   FontWeight="{Binding IsIdling, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
-                                   Foreground="{StaticResource AccentSlate}" FontFamily="Consolas" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <TextBlock Grid.Column="0" Text="{Binding TodayTime}" FontSize="16" 
+                               FontWeight="{Binding IsFocusing, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
+                               Foreground="{StaticResource AccentPurple}" FontFamily="Consolas" 
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding SlackingTime}" FontSize="16" 
+                               FontWeight="{Binding IsSlacking, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
+                               Foreground="{StaticResource AccentAmber}" FontFamily="Consolas" 
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding IdleTime}" FontSize="16" 
+                               FontWeight="{Binding IsIdling, Converter={x:Static converters:BoolToFontWeightConverter.Instance}}"
+                               Foreground="{StaticResource AccentSlate}" FontFamily="Consolas" 
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
 
                 <!-- 비율 바 -->
